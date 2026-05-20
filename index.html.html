@@ -1,0 +1,2225 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="博客來網路書城專屬書籍推薦與市場調查系統。透過用戶點擊、評分與購買行為，以協同過濾演算法推薦相似書籍，為市調人員提供最直觀的分析報告。">
+  <title>博客來網路書城 - 書籍推薦系統與市調平台</title>
+  <style>
+    /* ==========================================================================
+       1. CSS 設計系統 - 現代深色玻璃擬態 (styles.css)
+       ========================================================================== */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+
+    :root {
+      /* 色彩系統 - 精緻深色玻璃擬態與博客來品牌綠 */
+      --bg-primary: #0a0e17;
+      --bg-secondary: #121826;
+      --bg-glow: radial-gradient(circle at 50% 0%, #1a2f4c 0%, #0a0e17 70%);
+      
+      --card-bg: rgba(22, 30, 49, 0.65);
+      --card-bg-hover: rgba(30, 41, 67, 0.85);
+      --card-border: rgba(255, 255, 255, 0.05);
+      --card-border-hover: rgba(255, 255, 255, 0.12);
+      
+      --brand-green: #00b852; /* 博客來綠 */
+      --brand-green-glow: rgba(0, 184, 82, 0.25);
+      --brand-green-hover: #00df64;
+      
+      --accent-cyan: #00f0ff;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-orange: #f59e0b;
+      --accent-pink: #ec4899;
+      
+      --text-primary: #f3f4f6;
+      --text-secondary: #a3aed0;
+      --text-muted: #626d8a;
+      
+      --shadow-sm: 0 4px 10px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.6);
+      --blur-md: blur(16px);
+      --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* 全域設定 */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', 'Inter', 'Noto Sans TC', sans-serif;
+      background-color: var(--bg-primary);
+      background-image: var(--bg-glow);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* 捲軸美化 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--brand-green);
+    }
+
+    /* 核心版面配置 (Grid Layout) */
+    .app-container {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      grid-template-rows: 80px 1fr;
+      grid-template-areas: 
+        "header header"
+        "sidebar main";
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    /* 標頭 (Header) */
+    header {
+      grid-area: header;
+      background: rgba(10, 14, 23, 0.8);
+      backdrop-filter: var(--blur-md);
+      -webkit-backdrop-filter: var(--blur-md);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      z-index: 100;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--brand-green) 0%, #007a33 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: white;
+      box-shadow: 0 0 15px var(--brand-green-glow);
+    }
+
+    .logo-text h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .logo-text p {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      letter-spacing: 0.5px;
+    }
+
+    .system-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 16px;
+      border-radius: 30px;
+      border: 1px solid var(--card-border);
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      background-color: var(--brand-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--brand-green);
+      animation: pulse 2s infinite;
+    }
+
+    .status-text {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* 側邊欄 (Sidebar) */
+    aside {
+      grid-area: sidebar;
+      background: rgba(18, 24, 38, 0.7);
+      backdrop-filter: var(--blur-md);
+      -webkit-backdrop-filter: var(--blur-md);
+      border-right: 1px solid var(--card-border);
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 使用者卡片 */
+    .user-selector-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .user-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+
+    .user-card:hover {
+      background: var(--card-bg-hover);
+      border-color: var(--card-border-hover);
+      transform: translateY(-2px);
+    }
+
+    .user-card.active {
+      background: rgba(0, 184, 82, 0.08);
+      border-color: var(--brand-green);
+      box-shadow: 0 0 15px rgba(0, 184, 82, 0.1);
+    }
+
+    .user-card.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 15%;
+      height: 70%;
+      width: 4px;
+      background: var(--brand-green);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .user-avatar {
+      font-size: 20px;
+      width: 38px;
+      height: 38px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+    }
+
+    .user-desc {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 行為記錄器 */
+    .behavior-stats {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .stat-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .stat-val {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-val.clicks { color: var(--accent-cyan); }
+    .stat-val.ratings { color: var(--accent-orange); }
+    .stat-val.purchases { color: var(--brand-green); }
+
+    .stat-lbl {
+      font-size: 0.62rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* 按鈕樣式 */
+    .btn-primary-outline {
+      background: transparent;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      color: var(--text-secondary);
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: var(--transition-smooth);
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary-outline:hover {
+      border-color: var(--brand-green);
+      color: var(--brand-green);
+      background: rgba(0, 184, 82, 0.03);
+    }
+
+    /* 主工作區 */
+    main {
+      grid-area: main;
+      overflow-y: auto;
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 分頁選單 */
+    .tab-navigation {
+      display: flex;
+      gap: 15px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 12px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      cursor: pointer;
+      position: relative;
+      transition: var(--transition-smooth);
+      font-family: inherit;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--brand-green);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -13px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--brand-green);
+      border-radius: 3px;
+      box-shadow: 0 0 10px var(--brand-green);
+    }
+
+    /* 分頁內容區 */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* 分類過濾器 */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .filter-chip {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: var(--transition-smooth);
+    }
+
+    .filter-chip:hover {
+      border-color: var(--card-border-hover);
+      color: var(--text-primary);
+    }
+
+    .filter-chip.active {
+      background: var(--brand-green);
+      color: white;
+      border-color: var(--brand-green);
+      box-shadow: 0 5px 15px var(--brand-green-glow);
+    }
+
+    /* 書籍列表網格 */
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    /* 書籍卡片 */
+    .book-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: var(--transition-smooth);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .book-card:hover {
+      background: var(--card-bg-hover);
+      border-color: var(--card-border-hover);
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .book-cover-area {
+      height: 150px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      overflow: hidden;
+    }
+
+    .book-cover-glow {
+      position: absolute;
+      width: 110px;
+      height: 155px;
+      border-radius: 6px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      transform: perspective(600px) rotateY(-12deg);
+      transition: var(--transition-smooth);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12px;
+      color: white;
+      font-weight: 700;
+    }
+
+    .book-card:hover .book-cover-glow {
+      transform: perspective(600px) rotateY(0deg) scale(1.05);
+    }
+
+    .cover-category {
+      font-size: 0.6rem;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 6px;
+      border-radius: 30px;
+      align-self: flex-start;
+      backdrop-filter: blur(5px);
+    }
+
+    .cover-title-inner {
+      font-size: 0.75rem;
+      line-height: 1.3;
+      margin-top: auto;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .book-info-area {
+      padding: 15px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .book-category {
+      font-size: 0.7rem;
+      color: var(--brand-green);
+      font-weight: 600;
+    }
+
+    .book-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.4;
+      height: 2.6rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .book-author {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .book-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      height: 2.2rem;
+      margin-top: 2px;
+    }
+
+    .book-price-rating {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .book-price {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-primary);
+    }
+
+    .book-price::before {
+      content: 'NT$ ';
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .book-rating {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent-orange);
+    }
+
+    /* 行為操作面板 */
+    .interaction-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-secondary);
+      font-family: inherit;
+    }
+
+    .btn-action.btn-click:hover {
+      background: rgba(0, 240, 255, 0.08);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .btn-action.btn-buy {
+      background: var(--brand-green);
+      border-color: var(--brand-green);
+      color: white;
+    }
+
+    .btn-action.btn-buy:hover {
+      background: var(--brand-green-hover);
+      box-shadow: 0 0 10px var(--brand-green-glow);
+    }
+
+    /* 評分選取器 */
+    .rating-selector {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      margin-top: 6px;
+    }
+
+    .rating-star {
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      transition: transform 0.1s ease;
+    }
+
+    .rating-star:hover {
+      transform: scale(1.2);
+    }
+
+    .rating-star.filled {
+      color: var(--accent-orange);
+    }
+
+    /* 已購標章 */
+    .badge-purchased {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--brand-green);
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 4px;
+      box-shadow: 0 3px 8px rgba(0, 184, 82, 0.3);
+      z-index: 5;
+    }
+
+    /* 推薦視覺化分頁佈局 */
+    .recommender-container {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 20px;
+    }
+
+    .algorithm-details-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    /* 用戶互動熱力圖 */
+    .heatmap-container {
+      overflow-x: auto;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .heatmap-grid {
+      display: grid;
+      gap: 4px;
+    }
+
+    .heatmap-row {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .heatmap-label {
+      width: 65px;
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      text-align: right;
+      padding-right: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .heatmap-cell {
+      flex: 1;
+      aspect-ratio: 1.4;
+      border-radius: 3px;
+      background-color: rgba(255, 255, 255, 0.02);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+      position: relative;
+      min-width: 25px;
+    }
+
+    .heatmap-cell:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      z-index: 10;
+      font-size: 0.68rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    }
+
+    .heatmap-cell.cell-empty { background-color: rgba(255, 255, 255, 0.02); }
+    .heatmap-cell.cell-click { background-color: rgba(0, 240, 255, 0.15); border: 1px solid rgba(0, 240, 255, 0.3); }
+    .heatmap-cell.cell-rate  { background-color: rgba(245, 158, 11, 0.25); border: 1px solid rgba(245, 158, 11, 0.5); }
+    .heatmap-cell.cell-buy   { background-color: rgba(0, 184, 82, 0.25); border: 1px solid rgba(0, 184, 82, 0.5); }
+
+    /* 相似用戶側欄 */
+    .similarity-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .similarity-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+
+    .sim-user-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+      max-height: 450px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .sim-user-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.02);
+    }
+
+    .sim-user-bar-container {
+      flex: 1;
+    }
+
+    .sim-user-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      margin-bottom: 3px;
+    }
+
+    .sim-user-bar {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .sim-user-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--brand-green) 0%, var(--accent-cyan) 100%);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.8s cubic-bezier(0.1, 0.8, 0.2, 1);
+    }
+
+    /* 推薦結果書單 */
+    .recommendations-section {
+      grid-column: span 2;
+    }
+
+    .rec-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 18px;
+      margin-top: 12px;
+    }
+
+    .rec-card {
+      position: relative;
+    }
+
+    .rec-score-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(10, 14, 23, 0.85);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 6px;
+      border-radius: 4px;
+      backdrop-filter: blur(5px);
+      z-index: 5;
+    }
+
+    .rec-reason {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px dashed rgba(59, 130, 246, 0.25);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.7rem;
+      color: #93c5fd;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* 市調報告分頁佈局 */
+    .report-container {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 20px;
+    }
+
+    .report-editor-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 12px;
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: var(--transition-smooth);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .report-textarea {
+      flex: 1;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      padding: 15px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      resize: vertical;
+      min-height: 450px;
+    }
+
+    .report-textarea:focus {
+      outline: none;
+      border-color: var(--brand-green);
+      box-shadow: 0 0 10px rgba(0, 184, 82, 0.15);
+    }
+
+    .insights-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .insight-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .metric-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .metric-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .metric-num {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--brand-green);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: var(--blur-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition-smooth);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--card-border-hover);
+      border-radius: 16px;
+      width: 380px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(20px);
+      transition: var(--transition-smooth);
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: translateY(0);
+    }
+
+    .modal-header h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .form-input {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--brand-green);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(18, 24, 38, 0.9);
+      border: 1px solid var(--brand-green);
+      color: var(--text-primary);
+      padding: 10px 20px;
+      border-radius: 6px;
+      box-shadow: var(--shadow-lg);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: var(--transition-smooth);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: 0.6; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1024px) {
+      .app-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 80px auto 1fr;
+        grid-template-areas: 
+          "header"
+          "sidebar"
+          "main";
+        height: auto;
+      }
+      aside {
+        border-right: none;
+        border-bottom: 1px solid var(--card-border);
+        height: auto;
+        max-height: 400px;
+      }
+      main {
+        height: auto;
+      }
+      .recommender-container, .report-container {
+        grid-template-columns: 1fr;
+      }
+      .recommendations-section {
+        grid-column: span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- 標頭區 -->
+    <header>
+      <div class="logo-section">
+        <div class="logo-icon">博</div>
+        <div class="logo-text">
+          <h1>博客來網路書城</h1>
+          <p>Book Recommendation & Market Research System</p>
+        </div>
+      </div>
+      <div class="system-status">
+        <div class="status-indicator"></div>
+        <div class="status-text">分析引擎：User-Based CF (餘弦相似度)</div>
+      </div>
+    </header>
+
+    <!-- 側邊欄 (用戶模擬與行為摘要) -->
+    <aside>
+      <div>
+        <div class="section-title">
+          <span>👥</span> 選擇模擬用戶
+        </div>
+        <div class="user-selector-container" id="user-selector">
+          <!-- 動態載入使用者列表 -->
+        </div>
+        <button class="btn-primary-outline" id="btn-add-user" style="margin-top: 12px;">
+          <span>➕</span> 新增自訂模擬用戶
+        </button>
+      </div>
+
+      <div class="behavior-stats">
+        <div class="section-title" style="margin-bottom: 5px;">
+          <span>📈</span> 當前用戶行為摘要
+        </div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-val clicks" id="stat-clicks">0</div>
+            <div class="stat-lbl">點擊量</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val ratings" id="stat-ratings">0</div>
+            <div class="stat-lbl">評分次數</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-val purchases" id="stat-purchases">0</div>
+            <div class="stat-lbl">已購書籍</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 主內容區 -->
+    <main>
+      <!-- 分頁導覽列 -->
+      <nav class="tab-navigation">
+        <button class="tab-btn active" data-tab="store">📚 書城大廳</button>
+        <button class="tab-btn" data-tab="visualizer">🧠 推薦引擎視覺化</button>
+        <button class="tab-btn" data-tab="report">📝 市調分析報告</button>
+      </nav>
+
+      <!-- 分頁1: 書城大廳 -->
+      <section class="tab-content active" id="store-tab">
+        <div class="filter-bar" id="category-filter">
+          <!-- 動態分類標籤 -->
+        </div>
+        <div class="books-grid" id="books-grid">
+          <!-- 動態書籍列表 -->
+        </div>
+      </section>
+
+      <!-- 分頁2: 推薦引擎視覺化 -->
+      <section class="tab-content" id="visualizer-tab">
+        <div class="recommender-container">
+          <!-- 左側: 矩陣與熱力圖 -->
+          <div class="algorithm-details-card">
+            <h2 style="font-size: 1.15rem; font-weight: 700;">📊 用戶行為互動矩陣 (Interaction Heatmap)</h2>
+            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px;">
+              橫軸為書籍編號（如 t01 代表深度學習，b02 代表原子習慣），縱軸為模擬用戶。網格顏色代表行為：
+              <span style="color: var(--accent-cyan); font-weight: 600;">👁️ 點擊</span>、
+              <span style="color: var(--accent-orange); font-weight: 600;">★ 評分</span>、
+              <span style="color: var(--brand-green); font-weight: 600;">🛒 購買</span>。
+              點擊您自己（高亮列）的網格可以直接快速購買該書。
+            </p>
+            <div class="heatmap-container" id="heatmap-box">
+              <!-- 熱力圖矩陣 -->
+            </div>
+          </div>
+
+          <!-- 右側: 用戶相似度 -->
+          <div class="similarity-sidebar">
+            <div class="similarity-card">
+              <h2 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 5px;">🤝 用戶相似度分析</h2>
+              <p style="font-size: 0.75rem; color: var(--text-secondary);">以餘弦相似度 (Cosine Similarity) 即時比對當前用戶與其他用戶的行為特徵向量所得出的結果：</p>
+              <div class="sim-user-list" id="similar-users-list">
+                <!-- 相似用戶 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 下方: 推薦書單 -->
+          <div class="recommendations-section">
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 12px; border-left: 4px solid var(--brand-green); padding-left: 8px;">🎯 專屬書籍推薦清單 (Collaborative Recommendations)</h2>
+            <div class="rec-grid" id="rec-books-grid">
+              <!-- 推薦書單 -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 分頁3: 市調分析報告 -->
+      <section class="tab-content" id="report-tab">
+        <div class="report-container">
+          <!-- 左側: Markdown 報告編輯與導出 -->
+          <div class="report-editor-card">
+            <div class="report-header">
+              <div>
+                <h2 style="font-size: 1.2rem; font-weight: 700;">📋 書城市場調查與推薦策略報告</h2>
+                <p style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">系統自動彙整書城大數據與當前模擬用戶的偏好，產出專業的 Markdown 市調策略報告。</p>
+              </div>
+              <div class="report-actions">
+                <button class="btn-secondary" id="btn-copy-report">📋 複製內容</button>
+                <button class="btn-secondary btn-buy" id="btn-export-report" style="font-weight: 700;">💾 匯出 Markdown 檔案</button>
+              </div>
+            </div>
+            <textarea class="report-textarea" id="report-text" readonly></textarea>
+          </div>
+
+          <!-- 右側: 平台營運指標面板 -->
+          <div class="insights-sidebar">
+            <div class="insight-card">
+              <h3 style="font-size: 1.05rem; font-weight: 700;">📊 平台營運關鍵指標</h3>
+              <div class="metric-list">
+                <div class="metric-box">
+                  <span style="font-size: 0.8rem; color: var(--text-secondary);">累計互動次數</span>
+                  <span class="metric-num" id="report-total-clicks">0</span>
+                </div>
+                <div class="metric-box">
+                  <span style="font-size: 0.8rem; color: var(--text-secondary);">累計購買商品數</span>
+                  <span class="metric-num" id="report-total-purchases">0</span>
+                </div>
+                <div class="metric-box">
+                  <span style="font-size: 0.8rem; color: var(--text-secondary);">矩陣密度 (互動率)</span>
+                  <span class="metric-num" id="report-matrix-density">0%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="insight-card" style="background: linear-gradient(135deg, rgba(0, 184, 82, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%); border-color: rgba(0, 184, 82, 0.15);">
+              <h3 style="font-size: 1rem; font-weight: 700; color: var(--brand-green); margin-bottom: 8px;">💡 市調推廣策略提示</h3>
+              <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">
+                1. 點擊書城大廳的書籍，能即時增加該用戶在特定分類的「點擊」權重 (權重: 1.0)。<br><br>
+                2. 購買書籍會為向量值加上顯著的購買權重 (權重: 5.0)，這是推薦算法最核心的特徵。<br><br>
+                3. 給予 4~5 星的正面評分能增加相似度，而 1~2 星的負面評分則會顯著扣減分數，從而篩選掉相似用戶不喜歡的書籍。
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- 新增使用者彈出視窗 -->
+  <div class="modal-overlay" id="modal-add-user">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>➕ 新增自訂模擬用戶</h3>
+      </div>
+      <form id="form-add-user">
+        <div class="form-group">
+          <label for="add-user-name">用戶姓名</label>
+          <input type="text" id="add-user-name" class="form-input" placeholder="請輸入姓名 (例如：李阿寶)" required autocomplete="off">
+        </div>
+        <div class="form-group" style="margin-top: 10px;">
+          <label for="add-user-avatar">頭像貼圖 (Emoji)</label>
+          <input type="text" id="add-user-avatar" class="form-input" placeholder="例如：🤓, 👩‍🎨, 🧑‍💻" maxlength="4">
+        </div>
+        <div class="form-group" style="margin-top: 10px;">
+          <label for="add-user-desc">個人特質描述</label>
+          <input type="text" id="add-user-desc" class="form-input" placeholder="例如：喜歡閱讀藝術書籍與設計理論">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-close-modal">取消</button>
+          <button type="submit" class="btn-secondary btn-buy">確認新增</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 提示通知 -->
+  <div class="toast" id="toast">
+    <span>🔔</span> 載入成功！
+  </div>
+
+  <!-- ==========================================================================
+       2. JavaScript 數據庫與核心推薦引擎 (data.js & app.js combined & expanded)
+       ========================================================================== -->
+  <script>
+    // --- 數據擴充 (7大分類，34本書籍，10位模擬用戶與高密度初始行為矩陣) ---
+    const CATEGORIES = {
+      LITERATURE: '文學小說',
+      BUSINESS: '商業理財',
+      TECHNOLOGY: '電腦資訊',
+      ART: '藝術設計',
+      PSYCHOLOGY: '心理勵志',
+      PARENTING: '親子教養',
+      MYSTERY: '懸疑推理'
+    };
+
+    const BOOKS = [
+      // 電腦資訊 (Technology)
+      { id: 'tech_01', title: '深度學習：核心演算法與卷積神經網路實戰', author: '楊建華', category: CATEGORIES.TECHNOLOGY, price: 680, rating: 4.8, description: '深入淺出介紹卷積神經網路與深度學習底層數學原理，並提供 PyTorch 實戰開發。', coverGradient: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' },
+      { id: 'tech_02', title: '乾淨架構：軟體結構與設計的生存指南', author: 'Robert C. Martin', category: CATEGORIES.TECHNOLOGY, price: 520, rating: 4.9, description: '軟體架構大師 Bob 叔叔的經典著作，探討如何建立易維護、易測試的乾淨系統架構。', coverGradient: 'linear-gradient(135deg, #2c3e50 0%, #3498db 100%)' },
+      { id: 'tech_03', title: 'Node.js 微服務架構與實戰開發', author: '陳俊傑', category: CATEGORIES.TECHNOLOGY, price: 480, rating: 4.5, description: '詳解如何利用 Docker、K8s 與 Node.js 構建高性能、具彈性的分散式微服務應用。', coverGradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)' },
+      { id: 'tech_04', title: 'Rust 程式設計與系統開發實務', author: 'Steve Klabnik', category: CATEGORIES.TECHNOLOGY, price: 620, rating: 4.7, description: '全面探討 Rust 語言的所有權系統、生命週期以及並行安全程式開發指南。', coverGradient: 'linear-gradient(135deg, #e65c00 0%, #F9D423 100%)' },
+      { id: 'tech_05', title: 'ChatGPT 與 AI 寫作助手實務應用', author: '林人工', category: CATEGORIES.TECHNOLOGY, price: 420, rating: 4.3, description: '引導讀者如何利用 Prompt 提示詞工程進行 AI 輔助寫作、程式碼生成與內容創作。', coverGradient: 'linear-gradient(135deg, #4ca1af 0%, #c4e0e5 100%)' },
+      { id: 'tech_06', title: 'Python 數據科學與機器學習實戰', author: '張分析', category: CATEGORIES.TECHNOLOGY, price: 590, rating: 4.6, description: '使用 Pandas、NumPy、Scikit-learn 與 Matplotlib 帶領讀者輕鬆進入數據分析領域。', coverGradient: 'linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%)' },
+
+      // 商業理財 (Business)
+      { id: 'biz_01', title: '致富心態：關於財富、貪婪與幸福的20堂理財課', author: 'Morgan Housel', category: CATEGORIES.BUSINESS, price: 360, rating: 4.9, description: '以幽默的故事揭示人類面對財富時的真實心態，重塑你對金錢、風險的認知。', coverGradient: 'linear-gradient(135deg, #3a7bd5 0%, #3a6073 100%)' },
+      { id: 'biz_02', title: '原子習慣：細微改變帶來巨大成就的實證法則', author: 'James Clear', category: CATEGORIES.BUSINESS, price: 330, rating: 4.9, description: '每天進步1%，一年後你將進步37倍！享譽全球的習慣養成書籍。', coverGradient: 'linear-gradient(135deg, #f857a6 0%, #ff5858 100%)' },
+      { id: 'biz_03', title: '原則：生活和工作', author: 'Ray Dalio', category: CATEGORIES.BUSINESS, price: 580, rating: 4.8, description: '橋水基金創辦人達利歐將其一生所遵循的生活與工作準則毫無保留地分享。', coverGradient: 'linear-gradient(135deg, #4b6cb7 0%, #182848 100%)' },
+      { id: 'biz_04', title: '金錢心理學：如何擺脫盲目盲從的理財迷思', author: 'Dan Ariely', category: CATEGORIES.BUSINESS, price: 380, rating: 4.6, description: '探討人們在消費與投資決策背後的非理性行為，並提供改善理財決策的方法。', coverGradient: 'linear-gradient(135deg, #6a3093 0%, #a044ff 100%)' },
+      { id: 'biz_05', title: '思考的藝術：52個非受迫性思考錯誤', author: 'Rolf Dobelli', category: CATEGORIES.BUSINESS, price: 350, rating: 4.5, description: '幫助你精準識破心理盲點與邏輯偏見，學會理性決策與獨立思考。', coverGradient: 'linear-gradient(135deg, #0f2027 0%, #203a43 100%, #2c5364 100%)' },
+      { id: 'biz_06', title: '零規則：網飛與顛覆產業的遊戲規則', author: 'Reed Hastings', category: CATEGORIES.BUSINESS, price: 460, rating: 4.7, description: '揭密 Netflix 如何透過「自由與責任」的企業文化，顛覆傳統影視產業。', coverGradient: 'linear-gradient(135deg, #e52d27 0%, #b31217 100%)' },
+
+      // 文學小說 (Literature)
+      { id: 'lit_01', title: '解憂雜貨店', author: '東野圭吾', category: CATEGORIES.LITERATURE, price: 350, rating: 4.9, description: '一間能夠諮詢煩惱的雜貨店，在時空交錯中，溫暖了每個迷惘靈魂的奇蹟物語。', coverGradient: 'linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%)' },
+      { id: 'lit_02', title: '沙丘（Dune）套書', author: 'Frank Herbert', category: CATEGORIES.LITERATURE, price: 1280, rating: 4.8, description: '科幻小說史上的不朽經典，在極度荒涼的厄拉科斯星球上，展開宏大的沙丘史詩。', coverGradient: 'linear-gradient(135deg, #f4c4f3 0%, #fc67fa 100%)' },
+      { id: 'lit_03', title: '第一人稱單數', author: '村上春樹', category: CATEGORIES.LITERATURE, price: 380, rating: 4.4, description: '村上春樹短篇小說集，以第一人稱視角，編織出八個探討回憶與生命謎題的故事。', coverGradient: 'linear-gradient(135deg, #43c6ac 0%, #191654 100%)' },
+      { id: 'lit_04', title: '嫌疑犯X的獻身', author: '東野圭吾', category: CATEGORIES.LITERATURE, price: 320, rating: 4.9, description: '數學天才石神為了解救失手殺人的靖子，設下了一個挑戰湯川學的完美騙局。', coverGradient: 'linear-gradient(135deg, #141e30 0%, #243b55 100%)' },
+      { id: 'lit_05', title: '百年孤寂', author: 'Gabriel García Márquez', category: CATEGORIES.LITERATURE, price: 450, rating: 4.8, description: '魔幻寫實主義代表作，書寫布恩迪亞家族七代人的傳奇興衰與宿命孤寂。', coverGradient: 'linear-gradient(135deg, #8a2387 0%, #e94057 50%, #f27121 100%)' },
+      { id: 'lit_06', title: '挪威的森林', author: '村上春樹', category: CATEGORIES.LITERATURE, price: 360, rating: 4.7, description: '描寫年輕人在迷惘與喪失中掙扎前行的青春輓歌，村上春樹最著名的長篇代表作。', coverGradient: 'linear-gradient(135deg, #1d976c 0%, #93f9b9 100%)' },
+
+      // 藝術設計 (Art)
+      { id: 'art_01', title: '寫給非設計師的設計書', author: 'Robin Williams', category: CATEGORIES.ART, price: 390, rating: 4.7, description: '排版與設計的四大黃金法則：相近、對齊、重複、對比，教你做出專業排版。', coverGradient: 'linear-gradient(135deg, #ff9966 0%, #ff5e62 100%)' },
+      { id: 'art_02', title: '設計的心理學：如何讓產品好用又討喜', author: 'Donald A. Norman', category: CATEGORIES.ART, price: 450, rating: 4.8, description: '探討產品易用性與美感設計，揭示好設計如何引導用戶，避免設計的心理雷區。', coverGradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)' },
+      { id: 'art_03', title: '包浩斯與現代主義的誕生', author: '陳安娜', category: CATEGORIES.ART, price: 550, rating: 4.6, description: '回溯包浩斯傳奇歷史，深入分析其如何顛覆傳統美學，奠定現代建築基石。', coverGradient: 'linear-gradient(135deg, #D4145A 0%, #FBB03B 100%)' },
+      { id: 'art_04', title: '藝術的力量', author: 'Simon Schama', category: CATEGORIES.ART, price: 680, rating: 4.8, description: '探討包括梵谷、卡拉瓦喬、畢卡索等八位偉大藝術家的創作歷程與生命衝擊。', coverGradient: 'linear-gradient(135deg, #000428 0%, #004e92 100%)' },
+      { id: 'art_05', title: '顏色與光線：寫實畫家指南', author: 'James Gurney', category: CATEGORIES.ART, price: 580, rating: 4.9, description: '透徹分析繪畫中色彩與光源的相互作用，是插畫師與視覺設計師必備經典。', coverGradient: 'linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%)' },
+
+      // 心理勵志 (Psychology)
+      { id: 'psy_01', title: '被討厭的勇氣：自我啟發之父阿德勒的指導', author: '岸見一郎', category: CATEGORIES.PSYCHOLOGY, price: 300, rating: 4.9, description: '人生的煩惱皆源於人際關係。阿德勒心理學以對話體裁展開，開啟心靈解脫之路。', coverGradient: 'linear-gradient(135deg, #85D8CE 0%, #085078 100%)' },
+      { id: 'psy_02', title: '蛤蟆先生去看心理醫生', author: 'Robert de Board', category: CATEGORIES.PSYCHOLOGY, price: 280, rating: 4.9, description: '溫暖的童話對話展示心理諮商的真實過程，探索個人情感與憂鬱調適自我成長。', coverGradient: 'linear-gradient(135deg, #f12711 0%, #f5af19 100%)' },
+      { id: 'psy_03', title: '非暴力溝通：愛的語言', author: 'Marshall B. Rosenberg', category: CATEGORIES.PSYCHOLOGY, price: 320, rating: 4.8, description: '藉由觀察、感受、需要、請求四個要素，教人如何褪去防衛，開啟溫暖連結。', coverGradient: 'linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)' },
+      { id: 'psy_04', title: '自卑與超越', author: 'Alfred Adler', category: CATEGORIES.PSYCHOLOGY, price: 340, rating: 4.6, description: '阿德勒的心理學代表作，深入論述優越感的追求、自卑感的克服與社會興趣。', coverGradient: 'linear-gradient(135deg, #aa076b 0%, #61045f 100%)' },
+      { id: 'psy_05', title: '活出意義來', author: 'Viktor Frankl', category: CATEGORIES.PSYCHOLOGY, price: 290, rating: 4.9, description: '集中營倖存心理學家弗蘭克克所創的「意義治療法」，指引讀者在苦難中尋求生命的價值。', coverGradient: 'linear-gradient(135deg, #30e8bf 0%, #ff8235 100%)' },
+
+      // 親子教養 (Parenting)
+      { id: 'prt_01', title: '父母的語言：影響孩子大腦發展的關鍵', author: 'Dana Suskind', category: CATEGORIES.PARENTING, price: 380, rating: 4.8, description: '強調父母與嬰幼兒對話的重要性，提供 3T 原則幫助塑造孩子的大腦神經網路。', coverGradient: 'linear-gradient(135deg, #ffc3a0 0%, #ffafbd 100%)' },
+      { id: 'prt_02', title: '被拒絕的勇氣：育兒與自我調適', author: '蔡媽媽', category: CATEGORIES.PARENTING, price: 320, rating: 4.4, description: '面對孩子的情緒風暴與拒絕行為，父母應當如何安定自己的心靈，重建親密連結。', coverGradient: 'linear-gradient(135deg, #70e1f5 0%, #ffd194 100%)' },
+      { id: 'prt_03', title: '靜心育兒：給父母的減壓指南', author: '蘇珊博士', category: CATEGORIES.PARENTING, price: 350, rating: 4.6, description: '結合正念禪修與兒童行為科學，帶領焦慮的現代家長踏上平靜放鬆的育兒旅程。', coverGradient: 'linear-gradient(135deg, #a8ff78 0%, #78ffd6 100%)' },
+
+      // 懸疑推理 (Mystery)
+      { id: 'mys_01', title: '達文西密碼', author: 'Dan Brown', category: CATEGORIES.MYSTERY, price: 390, rating: 4.8, description: '羅浮宮館長離奇遇害，符號學家蘭登與密碼學家索菲展開一場揭密聖杯陰謀的致命追逐。', coverGradient: 'linear-gradient(135deg, #373b44 0%, #4286f4 100%)' },
+      { id: 'mys_02', title: '福爾摩斯探案全集', author: 'Conan Doyle', category: CATEGORIES.MYSTERY, price: 650, rating: 4.9, description: '收錄柯南道爾筆下神探夏洛克·福爾摩斯所有的偵探小說作品，世界推理迷不朽聖經。', coverGradient: 'linear-gradient(135deg, #232526 0%, #414345 100%)' },
+      { id: 'mys_03', title: '惡意', author: '東野圭吾', category: CATEGORIES.MYSTERY, price: 300, rating: 4.9, description: '人氣作家日高邦彥遇害，兇手身份迅速揭曉，然而其殺人動機背後卻隱藏著令人膽寒的極致惡意。', coverGradient: 'linear-gradient(135deg, #870000 0%, #190000 100%)' }
+    ];
+
+    // 初始化模擬用戶及其歷史行為 (共 10 位用戶)
+    const INITIAL_USERS = [
+      {
+        id: 'user_tech',
+        name: '葉工程',
+        avatar: '👨‍💻',
+        description: '熱愛程式設計與人工智慧的後端工程師，偏好 Rust、深度學習與軟體架構書籍。',
+        behaviors: {
+          'tech_01': { click: 1, rate: 5, buy: 1 },
+          'tech_02': { click: 1, rate: 5, buy: 1 },
+          'tech_04': { click: 1, rate: 4, buy: 1 },
+          'tech_06': { click: 1, rate: 4, buy: 1 },
+          'art_02':  { click: 1, rate: 3, buy: 0 },
+          'biz_02':  { click: 1, rate: 4, buy: 1 },
+          'lit_02':  { click: 1, rate: 0, buy: 0 }
+        }
+      },
+      {
+        id: 'user_biz',
+        name: '錢大同',
+        avatar: '💼',
+        description: '專業投資顧問與理財講師，關注致富心態、基金原則、高效習慣與零規則管理學。',
+        behaviors: {
+          'biz_01': { click: 1, rate: 5, buy: 1 },
+          'biz_02': { click: 1, rate: 5, buy: 1 },
+          'biz_03': { click: 1, rate: 5, buy: 1 },
+          'biz_04': { click: 1, rate: 4, buy: 1 },
+          'biz_06': { click: 1, rate: 5, buy: 1 },
+          'psy_01': { click: 1, rate: 4, buy: 1 },
+          'tech_02': { click: 1, rate: 0, buy: 0 }
+        }
+      },
+      {
+        id: 'user_lit',
+        name: '林文青',
+        avatar: '☕',
+        description: '獨立書店店員與自由撰稿人，熱愛村上春樹與推理小說，偏好文學、療癒心理學。',
+        behaviors: {
+          'lit_01': { click: 1, rate: 5, buy: 1 },
+          'lit_03': { click: 1, rate: 5, buy: 1 },
+          'lit_04': { click: 1, rate: 4, buy: 1 },
+          'lit_06': { click: 1, rate: 5, buy: 1 },
+          'psy_02': { click: 1, rate: 5, buy: 1 },
+          'mys_03': { click: 1, rate: 4, buy: 1 },
+          'art_01': { click: 1, rate: 3, buy: 0 }
+        }
+      },
+      {
+        id: 'user_designer',
+        name: '白美雅',
+        avatar: '🎨',
+        description: 'UI/UX 資深設計師，講究簡潔美學，重視產品易用性與藝術設計史。',
+        behaviors: {
+          'art_01': { click: 1, rate: 5, buy: 1 },
+          'art_02': { click: 1, rate: 5, buy: 1 },
+          'art_03': { click: 1, rate: 4, buy: 1 },
+          'art_05': { click: 1, rate: 5, buy: 1 },
+          'psy_01': { click: 1, rate: 4, buy: 1 },
+          'lit_03': { click: 1, rate: 4, buy: 0 }
+        }
+      },
+      {
+        id: 'user_newbie',
+        name: '陳新進',
+        avatar: '🌱',
+        description: '剛入職的初階工程師，想轉數據科學，但也想建立原子習慣與心理調適。',
+        behaviors: {
+          'tech_02': { click: 1, rate: 4, buy: 1 },
+          'tech_06': { click: 1, rate: 5, buy: 1 },
+          'biz_02':  { click: 1, rate: 5, buy: 1 },
+          'psy_01':  { click: 1, rate: 0, buy: 0 }
+        }
+      },
+      {
+        id: 'user_parent',
+        name: '洪媽媽',
+        avatar: '🤱',
+        description: '關注幼兒早期發展的雙寶母親，常閱讀親子教養、正念減壓與家庭理財。',
+        behaviors: {
+          'prt_01': { click: 1, rate: 5, buy: 1 },
+          'prt_03': { click: 1, rate: 5, buy: 1 },
+          'psy_02': { click: 1, rate: 4, buy: 1 },
+          'biz_02': { click: 1, rate: 4, buy: 1 },
+          'biz_01': { click: 1, rate: 3, buy: 0 }
+        }
+      },
+      {
+        id: 'user_mystery',
+        name: '戴推理',
+        avatar: '🔍',
+        description: '本格派推理小說狂熱者，喜愛東野圭吾、柯南道爾，偶爾也看魔幻文學。',
+        behaviors: {
+          'mys_01': { click: 1, rate: 5, buy: 1 },
+          'mys_02': { click: 1, rate: 5, buy: 1 },
+          'mys_03': { click: 1, rate: 5, buy: 1 },
+          'lit_04': { click: 1, rate: 4, buy: 1 },
+          'lit_01': { click: 1, rate: 4, buy: 0 }
+        }
+      },
+      {
+        id: 'user_curator',
+        name: '蘇藝術',
+        avatar: '🏛️',
+        description: '當代美術館策展人，深度鑽研近代藝術的力量、色彩學與文學巨作。',
+        behaviors: {
+          'art_04': { click: 1, rate: 5, buy: 1 },
+          'art_05': { click: 1, rate: 4, buy: 1 },
+          'art_03': { click: 1, rate: 5, buy: 1 },
+          'lit_05': { click: 1, rate: 4, buy: 1 },
+          'lit_03': { click: 1, rate: 0, buy: 0 }
+        }
+      },
+      {
+        id: 'user_philosophy',
+        name: '周思辨',
+        avatar: '🦉',
+        description: '哲學研究社社員，喜歡思辨、探討心理偏誤與弗蘭克克的生命意義論。',
+        behaviors: {
+          'biz_05': { click: 1, rate: 5, buy: 1 },
+          'psy_05': { click: 1, rate: 5, buy: 1 },
+          'psy_01': { click: 1, rate: 4, buy: 1 },
+          'tech_05': { click: 1, rate: 3, buy: 0 }
+        }
+      },
+      {
+        id: 'user_empty',
+        name: '黃空白',
+        avatar: '🆕',
+        description: '剛加入博客來網路書城的新用戶，暫時無任何點擊、評分與購買記錄。',
+        behaviors: {}
+      }
+    ];
+
+    // ==========================================
+    // 3. 系統狀態與邏輯層 (app.js)
+    // ==========================================
+    let state = {
+      users: JSON.parse(JSON.stringify(INITIAL_USERS)), 
+      currentUser: null,
+      activeTab: 'store',
+      selectedCategory: 'all'
+    };
+
+    const WEIGHTS = {
+      click: 1.0,
+      buy: 5.0
+    };
+
+    // 初始化系統
+    document.addEventListener('DOMContentLoaded', () => {
+      state.currentUser = state.users[0];
+      initEventListeners();
+      renderAll();
+      showToast(`已載入模擬環境。當前用戶：${state.currentUser.name}`);
+    });
+
+    function initEventListeners() {
+      // 分頁切換
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const tab = e.target.getAttribute('data-tab');
+          switchTab(tab);
+        });
+      });
+
+      // 新增使用者彈窗按鈕
+      const btnAddUser = document.getElementById('btn-add-user');
+      if (btnAddUser) btnAddUser.addEventListener('click', openAddUserModal);
+
+      const btnCloseModal = document.getElementById('btn-close-modal');
+      if (btnCloseModal) btnCloseModal.addEventListener('click', closeAddUserModal);
+
+      const formAddUser = document.getElementById('form-add-user');
+      if (formAddUser) formAddUser.addEventListener('submit', handleAddUser);
+
+      // 報告操作
+      const btnExportReport = document.getElementById('btn-export-report');
+      if (btnExportReport) btnExportReport.addEventListener('click', exportReport);
+
+      const btnCopyReport = document.getElementById('btn-copy-report');
+      if (btnCopyReport) btnCopyReport.addEventListener('click', copyReport);
+    }
+
+    function switchTab(tabName) {
+      state.activeTab = tabName;
+      
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tabName);
+      });
+      
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `${tabName}-tab`);
+      });
+
+      if (tabName === 'visualizer') {
+        renderVisualizer();
+      } else if (tabName === 'report') {
+        generateAndRenderReport();
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      if (toast) {
+        toast.innerHTML = `<span>🔔</span> ${message}`;
+        toast.classList.add('show');
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 3000);
+      }
+    }
+
+    // ==========================================
+    // 協同過濾推薦算法核心
+    // ==========================================
+
+    function getUserBookScore(user, bookId) {
+      const behavior = user.behaviors[bookId];
+      if (!behavior) return 0;
+      
+      let score = 0;
+      if (behavior.click) score += WEIGHTS.click;
+      if (behavior.buy) score += WEIGHTS.buy;
+      
+      // 評分中心化 (以3星為0基準，5星為+3.0，1星為-3.0)
+      if (behavior.rate && behavior.rate > 0) {
+        score += (behavior.rate - 3) * 1.5;
+      }
+      return score;
+    }
+
+    function calculateCosineSimilarity(userA, userB) {
+      let dotProduct = 0;
+      let normA = 0;
+      let normB = 0;
+      
+      BOOKS.forEach(book => {
+        const scoreA = getUserBookScore(userA, book.id);
+        const scoreB = getUserBookScore(userB, book.id);
+        
+        dotProduct += scoreA * scoreB;
+        normA += scoreA * scoreA;
+        normB += scoreB * scoreB;
+      });
+      
+      if (normA === 0 || normB === 0) return 0;
+      return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    }
+
+    function getSimilarUsers(targetUser) {
+      return state.users
+        .filter(u => u.id !== targetUser.id)
+        .map(u => ({
+          user: u,
+          similarity: calculateCosineSimilarity(targetUser, u)
+        }))
+        .sort((a, b) => b.similarity - a.similarity);
+    }
+
+    function getRecommendations(targetUser, limit = 4) {
+      const similarUsers = getSimilarUsers(targetUser).filter(item => item.similarity > 0);
+      const recScores = {};
+      const recReasons = {};
+
+      // 冷啟動策略：推薦全站評分最高且當前用戶未曾碰過的熱銷書
+      if (similarUsers.length === 0) {
+        return BOOKS.filter(book => {
+          const b = targetUser.behaviors[book.id];
+          return !b || (!b.buy && !b.rate);
+        })
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, limit)
+        .map(book => ({
+          book,
+          score: book.rating / 5.0,
+          reason: '全書城人氣熱銷新書 (冷啟動推薦)'
+        }));
+      }
+
+      BOOKS.forEach(book => {
+        // 過濾已購買書籍
+        const targetBehavior = targetUser.behaviors[book.id];
+        if (targetBehavior && targetBehavior.buy) {
+          return;
+        }
+
+        let weightedSum = 0;
+        let simSum = 0;
+        let mainInfluencer = null;
+        let maxSimVal = -1;
+
+        similarUsers.forEach(item => {
+          const otherUser = item.user;
+          const sim = item.similarity;
+          const score = getUserBookScore(otherUser, book.id);
+
+          if (score > 0) {
+            weightedSum += sim * score;
+            simSum += sim;
+
+            if (sim > maxSimVal) {
+              maxSimVal = sim;
+              mainInfluencer = otherUser;
+            }
+          }
+        });
+
+        if (simSum > 0) {
+          const predScore = weightedSum / simSum;
+          recScores[book.id] = predScore;
+          recReasons[book.id] = `相似用戶「${mainInfluencer.name}」(相似度 ${(maxSimVal * 100).toFixed(0)}%) 也購買或給予好評`;
+        }
+      });
+
+      return Object.keys(recScores)
+        .map(bookId => {
+          const book = BOOKS.find(b => b.id === bookId);
+          return {
+            book,
+            score: recScores[bookId],
+            reason: recReasons[bookId]
+          };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit);
+    }
+
+    // ==========================================
+    // UI 渲染方法
+    // ==========================================
+
+    function renderAll() {
+      renderUserSelector();
+      renderBehaviorStats();
+      renderBookStore();
+      
+      if (state.activeTab === 'visualizer') {
+        renderVisualizer();
+      } else if (state.activeTab === 'report') {
+        generateAndRenderReport();
+      }
+    }
+
+    function renderUserSelector() {
+      const container = document.getElementById('user-selector');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      state.users.forEach(user => {
+        const card = document.createElement('div');
+        card.className = `user-card ${state.currentUser.id === user.id ? 'active' : ''}`;
+        
+        card.innerHTML = `
+          <div class="user-avatar">${user.avatar || '👤'}</div>
+          <div class="user-info">
+            <div class="user-name">${user.name}</div>
+            <div class="user-desc">${user.description || '平台VIP會員'}</div>
+          </div>
+        `;
+        
+        card.addEventListener('click', () => {
+          state.currentUser = user;
+          renderAll();
+          showToast(`已切換至用戶：${user.name}`);
+        });
+        
+        container.appendChild(card);
+      });
+    }
+
+    function renderBehaviorStats() {
+      const current = state.currentUser;
+      
+      let clicks = 0;
+      let ratings = 0;
+      let purchases = 0;
+      
+      Object.keys(current.behaviors).forEach(bookId => {
+        const b = current.behaviors[bookId];
+        if (b.click) clicks++;
+        if (b.rate && b.rate > 0) ratings++;
+        if (b.buy) purchases++;
+      });
+      
+      document.getElementById('stat-clicks').innerText = clicks;
+      document.getElementById('stat-ratings').innerText = ratings;
+      document.getElementById('stat-purchases').innerText = purchases;
+    }
+
+    function renderBookStore() {
+      const grid = document.getElementById('books-grid');
+      const chipsContainer = document.getElementById('category-filter');
+      if (!grid || !chipsContainer) return;
+      
+      chipsContainer.innerHTML = '';
+      
+      // "全部" Chip
+      const allChip = document.createElement('div');
+      allChip.className = `filter-chip ${state.selectedCategory === 'all' ? 'active' : ''}`;
+      allChip.innerText = '全部書籍';
+      allChip.addEventListener('click', () => {
+        state.selectedCategory = 'all';
+        renderBookStore();
+      });
+      chipsContainer.appendChild(allChip);
+      
+      Object.values(CATEGORIES).forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = `filter-chip ${state.selectedCategory === cat ? 'active' : ''}`;
+        chip.innerText = cat;
+        chip.addEventListener('click', () => {
+          state.selectedCategory = cat;
+          renderBookStore();
+        });
+        chipsContainer.appendChild(chip);
+      });
+      
+      const filteredBooks = BOOKS.filter(book => 
+        state.selectedCategory === 'all' || book.category === state.selectedCategory
+      );
+      
+      grid.innerHTML = '';
+      
+      filteredBooks.forEach(book => {
+        const card = document.createElement('div');
+        card.className = 'book-card';
+        
+        const userBehavior = state.currentUser.behaviors[book.id] || {};
+        const hasPurchased = userBehavior.buy === 1;
+        const currentRating = userBehavior.rate || 0;
+        
+        let badgeHTML = hasPurchased ? `<div class="badge-purchased">已購買</div>` : '';
+        
+        let starsHTML = '';
+        for (let i = 1; i <= 5; i++) {
+          starsHTML += `
+            <span class="rating-star ${i <= currentRating ? 'filled' : ''}" 
+                  data-star="${i}" 
+                  onclick="handleRateBook('${book.id}', ${i})">★</span>
+          `;
+        }
+        
+        card.innerHTML = `
+          ${badgeHTML}
+          <div class="book-cover-area">
+            <div class="book-cover-glow" style="background: ${book.coverGradient}">
+              <span class="cover-category">${book.category}</span>
+              <span class="cover-title-inner">${book.title}</span>
+            </div>
+          </div>
+          <div class="book-info-area">
+            <div class="book-category">${book.category}</div>
+            <div class="book-title" title="${book.title}">${book.title}</div>
+            <div class="book-author">作者：${book.author}</div>
+            <div class="book-desc" title="${book.description}">${book.description}</div>
+            <div class="book-price-rating">
+              <div class="book-price">${book.price}</div>
+              <div class="book-rating">★ ${book.rating.toFixed(1)}</div>
+            </div>
+            <div class="rating-selector">
+              <span style="font-size: 0.68rem; color: var(--text-secondary); margin-right: 4px;">我的評分:</span>
+              ${starsHTML}
+            </div>
+            <div class="interaction-bar">
+              <button class="btn-action btn-click" onclick="handleClickBook('${book.id}')">
+                <span>👁️</span> 點擊
+              </button>
+              <button class="btn-action btn-buy" onclick="handleBuyBook('${book.id}')">
+                <span>🛒</span> 購買
+              </button>
+            </div>
+          </div>
+        `;
+        
+        grid.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // 模擬操作處理
+    // ==========================================
+
+    window.handleClickBook = function(bookId) {
+      const current = state.currentUser;
+      if (!current.behaviors[bookId]) {
+        current.behaviors[bookId] = { click: 0, rate: 0, buy: 0 };
+      }
+      current.behaviors[bookId].click = 1;
+      renderAll();
+      showToast(`點擊了《${BOOKS.find(b => b.id === bookId).title}》`);
+    };
+
+    window.handleRateBook = function(bookId, stars) {
+      const current = state.currentUser;
+      if (!current.behaviors[bookId]) {
+        current.behaviors[bookId] = { click: 0, rate: 0, buy: 0 };
+      }
+      current.behaviors[bookId].click = 1;
+      current.behaviors[bookId].rate = stars;
+      renderAll();
+      showToast(`給予《${BOOKS.find(b => b.id === bookId).title}》${stars} 星評分！`);
+    };
+
+    window.handleBuyBook = function(bookId) {
+      const current = state.currentUser;
+      if (!current.behaviors[bookId]) {
+        current.behaviors[bookId] = { click: 0, rate: 0, buy: 0 };
+      }
+      current.behaviors[bookId].click = 1;
+      current.behaviors[bookId].buy = 1;
+      renderAll();
+      showToast(`成功購買《${BOOKS.find(b => b.id === bookId).title}》！`);
+    };
+
+    // ==========================================
+    // 推薦視覺化分頁邏輯
+    // ==========================================
+
+    function renderVisualizer() {
+      const activeUser = state.currentUser;
+      
+      // 1. 相似用戶進度條
+      const simListContainer = document.getElementById('similar-users-list');
+      if (simListContainer) {
+        simListContainer.innerHTML = '';
+        const similarUsers = getSimilarUsers(activeUser);
+        
+        similarUsers.forEach(item => {
+          const scorePercent = Math.max(0, item.similarity * 100).toFixed(0);
+          const div = document.createElement('div');
+          div.className = 'sim-user-item';
+          
+          div.innerHTML = `
+            <div class="user-avatar" style="font-size: 1.15rem;">${item.user.avatar || '👤'}</div>
+            <div class="sim-user-bar-container">
+              <div class="sim-user-meta">
+                <span style="font-weight:600; color:var(--text-primary);">${item.user.name}</span>
+                <span style="font-weight:700; color:var(--brand-green);">${scorePercent}% 相似度</span>
+              </div>
+              <div class="sim-user-bar">
+                <div class="sim-user-fill" style="width: 0%"></div>
+              </div>
+            </div>
+          `;
+          simListContainer.appendChild(div);
+          
+          setTimeout(() => {
+            const fill = div.querySelector('.sim-user-fill');
+            if (fill) fill.style.width = `${scorePercent}%`;
+          }, 50);
+        });
+      }
+      
+      // 2. 熱力圖矩陣
+      renderHeatmap();
+
+      // 3. 推薦書單
+      renderRecommendationList();
+    }
+
+    function renderHeatmap() {
+      const container = document.getElementById('heatmap-box');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      const grid = document.createElement('div');
+      grid.className = 'heatmap-grid';
+      
+      // 標頭行（圖書 ID）
+      const headerRow = document.createElement('div');
+      headerRow.className = 'heatmap-row';
+      
+      const cornerCell = document.createElement('div');
+      cornerCell.className = 'heatmap-label';
+      cornerCell.innerText = '用戶 \\ 書籍';
+      headerRow.appendChild(cornerCell);
+      
+      BOOKS.forEach(book => {
+        const label = document.createElement('div');
+        label.className = 'heatmap-cell';
+        label.style.backgroundColor = 'transparent';
+        label.style.color = 'var(--text-muted)';
+        
+        // 將 ID 做精簡顯示 (如 tech_01 -> t01, biz_02 -> b02)
+        const parts = book.id.split('_');
+        const shortId = parts[0].charAt(0) + parts[1];
+        
+        label.innerText = shortId;
+        label.setAttribute('data-tooltip', book.title);
+        headerRow.appendChild(label);
+      });
+      grid.appendChild(headerRow);
+      
+      // 用戶列數據
+      state.users.forEach(user => {
+        const row = document.createElement('div');
+        row.className = 'heatmap-row';
+        if (user.id === state.currentUser.id) {
+          row.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
+        }
+        
+        const userLabel = document.createElement('div');
+        userLabel.className = 'heatmap-label';
+        userLabel.innerText = user.name;
+        row.appendChild(userLabel);
+        
+        BOOKS.forEach(book => {
+          const b = user.behaviors[book.id];
+          const cell = document.createElement('div');
+          cell.className = 'heatmap-cell';
+          
+          let tooltip = `${user.name} 對《${book.title}》：`;
+          let valText = '-';
+          
+          if (b) {
+            if (b.buy) {
+              cell.classList.add('cell-buy');
+              tooltip += '已購買';
+              valText = '🛒';
+            } else if (b.rate && b.rate > 0) {
+              cell.classList.add('cell-rate');
+              tooltip += `評分 ${b.rate}★`;
+              valText = `${b.rate}★`;
+            } else if (b.click) {
+              cell.classList.add('cell-click');
+              tooltip += '已點擊';
+              valText = '👁️';
+            }
+          } else {
+            cell.classList.add('cell-empty');
+            tooltip += '尚無互動';
+          }
+          
+          cell.innerText = valText;
+          cell.setAttribute('data-tooltip', tooltip);
+          
+          cell.addEventListener('click', () => {
+            if (user.id === state.currentUser.id) {
+              handleBuyBook(book.id);
+            } else {
+              showToast(`您目前正在模擬「${state.currentUser.name}」，無法修改其他用戶的歷史行為。`);
+            }
+          });
+          row.appendChild(cell);
+        });
+        grid.appendChild(row);
+      });
+      
+      container.appendChild(grid);
+    }
+
+    function renderRecommendationList() {
+      const container = document.getElementById('rec-books-grid');
+      if (!container) return;
+      
+      container.innerHTML = '';
+      const recs = getRecommendations(state.currentUser);
+      
+      if (recs.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: span 4; text-align: center; padding: 40px; color: var(--text-muted);">
+            💡 當前沒有可用的推薦書籍。請試著在「書城大廳」為用戶點擊、評分或購買幾本書，系統將能計算更精準的相似度並推薦新書！
+          </div>
+        `;
+        return;
+      }
+      
+      recs.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'book-card rec-card';
+        
+        const confidenceScore = Math.min(100, Math.max(0, item.score * 20)).toFixed(0); 
+        
+        card.innerHTML = `
+          <div class="rec-score-badge">推薦指數: ${confidenceScore}%</div>
+          <div class="book-cover-area">
+            <div class="book-cover-glow" style="background: ${item.book.coverGradient}">
+              <span class="cover-category">${item.book.category}</span>
+              <span class="cover-title-inner">${item.book.title}</span>
+            </div>
+          </div>
+          <div class="book-info-area">
+            <div class="book-category">${item.book.category}</div>
+            <div class="book-title" title="${item.book.title}">${item.book.title}</div>
+            <div class="book-author">作者：${item.book.author}</div>
+            <div class="book-desc" title="${item.book.description}">${item.book.description}</div>
+            <div class="book-price-rating">
+              <div class="book-price">${item.book.price}</div>
+              <div class="book-rating">★ ${item.book.rating.toFixed(1)}</div>
+            </div>
+            <div class="rec-reason">
+              <span>🧠</span> ${item.reason}
+            </div>
+            <div class="interaction-bar" style="margin-top: 8px;">
+              <button class="btn-action btn-buy" style="width: 100%;" onclick="handleBuyBook('${item.book.id}')">
+                <span>🛒</span> 直接購買
+              </button>
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // 市調報告生成與管理
+    // ==========================================
+
+    function generateAndRenderReport() {
+      const textarea = document.getElementById('report-text');
+      if (!textarea) return;
+      
+      const totalUsers = state.users.length;
+      const totalBooks = BOOKS.length;
+      
+      let totalClicks = 0;
+      let totalPurchases = 0;
+      let totalRatings = 0;
+      let categoryDistribution = {};
+      let popularBooks = {};
+      
+      state.users.forEach(user => {
+        Object.keys(user.behaviors).forEach(bookId => {
+          const b = user.behaviors[bookId];
+          const book = BOOKS.find(bk => bk.id === bookId);
+          if (!book) return;
+          
+          if (b.click) totalClicks++;
+          if (b.buy) {
+            totalPurchases++;
+            popularBooks[book.title] = (popularBooks[book.title] || 0) + 1;
+          }
+          if (b.rate && b.rate > 0) totalRatings++;
+          
+          categoryDistribution[book.category] = (categoryDistribution[book.category] || 0) + 1;
+        });
+      });
+      
+      const sortedPopular = Object.entries(popularBooks)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+        
+      const reportTotalClicks = document.getElementById('report-total-clicks');
+      const reportTotalPurchases = document.getElementById('report-total-purchases');
+      const reportMatrixDensity = document.getElementById('report-matrix-density');
+      
+      if (reportTotalClicks) reportTotalClicks.innerText = totalClicks;
+      if (reportTotalPurchases) reportTotalPurchases.innerText = totalPurchases;
+      
+      if (reportMatrixDensity) {
+        const maxInteractions = totalUsers * totalBooks;
+        const currentInteractions = totalClicks; 
+        const density = ((currentInteractions / maxInteractions) * 100).toFixed(1);
+        reportMatrixDensity.innerText = `${density}%`;
+      }
+      
+      const dateStr = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+      const reportContent = `# 博客來網路書城 - 用戶行為市調與書籍推薦策略報告
+報告日期：${dateStr}
+市調分析員：AI 推薦系統分析小組
+
+## 一、 書城總體互動指標概覽
+* **平台註冊模擬用戶數**：${totalUsers} 人
+* **書城商品總數**：${totalBooks} 本
+* **累計用戶點擊量**：${totalClicks} 次
+* **累計圖書購買量**：${totalPurchases} 本
+* **用戶評分次數**：${totalRatings} 次
+* **用戶-物品矩陣稀疏度 (Density)**：${((totalClicks / (totalUsers * totalBooks)) * 100).toFixed(2)}%
+
+## 二、 熱門商品銷售與分類分析
+### 1. 全站最熱銷書籍排行 (Top 3)
+${sortedPopular.map((item, idx) => `${idx + 1}. **《${item[0]}》** - 累計購買：${item[1]} 次`).join('\n')}
+
+### 2. 用戶行為分類分佈 (互動熱度)
+${Object.entries(categoryDistribution).map(item => `* **${item[0]}**：${item[1]} 次互動`).join('\n')}
+
+## 三、 推薦引擎策略與演算法評估
+* **核心演算法**：基於用戶的協同過濾 (User-Based Collaborative Filtering)
+* **相似度度量**：餘弦相似度 (Cosine Similarity)
+* **冷啟動處理機制**：若當前用戶歷史行為太少，系統將自動降級 (Fallback) 至「全站高評分熱門書籍推薦」策略。
+
+### 1. 用戶群體畫像與相似度分析
+* **${state.currentUser.name}** 當前的最相似用戶為：
+  ${getSimilarUsers(state.currentUser).slice(0, 2).map(item => `  - **${item.user.name}** (相似度: ${(item.similarity * 100).toFixed(1)}%)`).join('\n')}
+
+### 2. 即時推薦清單生成
+當前為用戶「${state.currentUser.name}」生成的推薦結果：
+${getRecommendations(state.currentUser).map((rec, idx) => `* **${idx + 1}. 《${rec.book.title}》** (類別: ${rec.book.category})
+  - *推薦理由*：${rec.reason}`).join('\n')}
+
+## 四、 商業化推廣建議
+1. **精準定向促銷**：當前系統能有效將 ${state.currentUser.name} 與相似偏好用戶相匹配。建議於用戶結帳時，即時於購物車下方嵌入「與您相似的讀者也買了...」商品卡片。
+2. **分類社群打造**：以「${Object.entries(categoryDistribution).sort((a,b)=>b[1]-a[1])[0]?.[0] || '文學小說'}」為代表的分類目前互動最為活躍，可優先建立讀書社群，加強用戶的黏著度。
+3. **優化冷啟動轉化率**：針對註冊首日的新用戶，主動引導其進行 3 個以上的分類喜好點選，以便快速構建高密度相似矩陣，提供精準度更高的書籍推薦。
+`;
+
+      textarea.value = reportContent;
+    }
+
+    function exportReport() {
+      const content = document.getElementById('report-text').value;
+      const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `博客來書籍推薦市調報告-${state.currentUser.name}-${new Date().toISOString().slice(0,10)}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('報告已成功匯出為 Markdown 檔案！');
+    }
+
+    function copyReport() {
+      const textarea = document.getElementById('report-text');
+      textarea.select();
+      document.execCommand('copy');
+      showToast('報告已成功複製到剪貼簿！');
+    }
+
+    // ==========================================
+    // 新增用戶彈窗邏輯
+    // ==========================================
+
+    function openAddUserModal() {
+      const modal = document.getElementById('modal-add-user');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeAddUserModal() {
+      const modal = document.getElementById('modal-add-user');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function handleAddUser(e) {
+      e.preventDefault();
+      
+      const nameInput = document.getElementById('add-user-name');
+      const avatarInput = document.getElementById('add-user-avatar');
+      const descInput = document.getElementById('add-user-desc');
+      
+      if (!nameInput.value.trim()) {
+        alert('請輸入用戶名稱！');
+        return;
+      }
+      
+      const newId = `user_custom_${Date.now()}`;
+      const newUser = {
+        id: newId,
+        name: nameInput.value.trim(),
+        avatar: avatarInput.value.trim() || '👤',
+        description: descInput.value.trim() || '自訂模擬用戶',
+        behaviors: {}
+      };
+      
+      state.users.push(newUser);
+      state.currentUser = newUser;
+      
+      nameInput.value = '';
+      descInput.value = '';
+      
+      closeAddUserModal();
+      renderAll();
+      showToast(`成功新增並切換至模擬用戶：${newUser.name}`);
+    }
+  </script>
+</body>
+</html>
